@@ -1,26 +1,13 @@
 import tkinter as tk
 import customtkinter as ctk
-import Window
+from Couleurs import C
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
-C = {
-    "fond":      "#0D1117",
-    "panneau":   "#161B22",
-    "carte":     "#1C2333",
-    "bleu":      "#3B82F6",
-    "vert":      "#22C55E",
-    "rouge":     "#EF4444",
-    "orange":    "#F59E0B",
-    "cyan":      "#06B6D4",
-    "texte":     "#F1F5F9",
-    "dim":       "#64748B",
-    "bordure":   "#2D3748",
-}
 
-MOIS     = ["Oct", "Nov", "Déc", "Jan", "Fév", "Mar", "Apr"]
-REVENUS  = [1100, 0, 0, 0, 0, 0, 0]
+MOIS = ["Oct", "Nov", "Déc", "Jan", "Fév", "Mar", "Apr"]
+REVENUS = [1100, 0, 0, 0, 0, 0, 0]
 DEPENSES = [1000, 0, 0, 0, 0, 0, 0]
 
 ALERTES = [
@@ -37,7 +24,7 @@ COMPTES = [
 ]
 
 
-def carte_kpi(parent, titre, valeur, couleur):
+def cadre_kpi(parent, titre, valeur, couleur):
 
     cadre = ctk.CTkFrame(parent, fg_color=C["carte"], corner_radius=10,
     border_width=1, border_color=C["bordure"])
@@ -51,7 +38,7 @@ def carte_kpi(parent, titre, valeur, couleur):
     return cadre
 
 
-def carte_alerte(parent, icone, titre, description, couleur):
+def cadre_alerte(parent, icone, titre, description, couleur):
 
     cadre = ctk.CTkFrame(parent, fg_color=C["carte"], corner_radius=10,
     border_width=1, border_color=couleur)
@@ -71,7 +58,7 @@ def carte_alerte(parent, icone, titre, description, couleur):
     return cadre
 
 
-def carte_compte(parent, nom, solde, couleur):
+def cadre_compte(parent, nom, solde, couleur):
 
     cadre = ctk.CTkFrame(parent, fg_color=C["carte"], corner_radius=10,
     border_width=1, border_color=C["bordure"])
@@ -84,7 +71,7 @@ def carte_compte(parent, nom, solde, couleur):
 
     couleur_solde = C["rouge"] if solde < 0 else C["texte"]
 
-    signe = "−" if solde < 0 else ""
+    signe = "-" if solde < 0 else ""
 
     ctk.CTkLabel(cadre, text=f"{signe}€{abs(solde):,.2f}",
     font=("Arial", 16, "bold"),
@@ -145,3 +132,101 @@ class GraphiqueBarres(tk.Canvas):
         self.create_rectangle(ml+80, 8, ml+92, 18, fill=C["rouge"], outline="")
         self.create_text(ml+96, 13, text="Dépenses", fill=C["dim"],
         font=("Arial", 10), anchor="w")
+
+
+class App(ctk.CTk):
+
+    def __init__(self):
+
+        super().__init__()
+        self.title("Dashboard")
+        self.geometry("1200x750")
+        self.configure(fg_color=C["fond"])
+        self._build()
+
+    def _build(self):
+        # Sidebar
+        sidebar = ctk.CTkFrame(self, width=200, fg_color=C["panneau"], corner_radius=0)
+        sidebar.pack(side="left", fill="y")
+        sidebar.pack_propagate(False)
+
+        ctk.CTkLabel(sidebar, text="PopularBank", font=("Arial", 18, "bold"),
+        text_color=C["bleu"]).pack(padx=20, pady=24, anchor="w")
+        ctk.CTkFrame(sidebar, height=1, fg_color=C["bordure"]).pack(fill="x", padx=16)
+
+        for label, actif in [("Menu Globale", True), ("Transactions", False),
+        ("Historique", False)]:
+            
+            ctk.CTkButton(sidebar, text=label, anchor="w",
+            fg_color="#1D3A6E" if actif else "transparent",
+            hover_color=C["carte"],
+            text_color=C["texte"] if actif else C["dim"],
+            corner_radius=8, height=40,
+            font=("Arial", 13)).pack(fill="x", padx=10, pady=2)
+
+        # Contenu
+        contenu = ctk.CTkScrollableFrame(self, fg_color=C["fond"])
+        contenu.pack(side="left", fill="both", expand=True)
+
+        # Titre
+        titre_ligne = ctk.CTkFrame(contenu, fg_color="transparent")
+        titre_ligne.pack(fill="x", padx=24, pady=(20, 0))
+        ctk.CTkLabel(titre_ligne, text="Vue Globale", font=("Arial", 24, "bold"),
+        text_color=C["texte"]).pack(side="left")
+
+        ctk.CTkButton(titre_ligne, text="+ Ajouter compte",
+        fg_color=C["bleu"], corner_radius=8,
+        height=34, font=("Arial", 12)).pack(side="right")
+
+        # KPIs
+        kpis_frame = ctk.CTkFrame(contenu, fg_color="transparent")
+        kpis_frame.pack(fill="x", padx=24, pady=(16, 0))
+        for i in range(4):
+            kpis_frame.columnconfigure(i, weight=1, uniform="kpi")
+        for i, (titre, val, col) in enumerate([
+            ("Solde Total", "€0", C["bleu"]),
+            ("Dépenses ce mois", "€0", C["rouge"]),
+            ("Épargne ce mois", "€0", C["vert"]),
+            ("Prochains débits", "€0", C["orange"]),
+        ]):
+            cadre_kpi(kpis_frame, titre, val, col).grid(
+                row=0, column=i, sticky="nsew", padx=(0 if i == 0 else 8, 0))
+
+        # Alertes
+        ctk.CTkLabel(contenu, text="Alertes",
+        font=("Arial", 15, "bold"),
+        text_color=C["texte"]).pack(anchor="w", padx=24, pady=(20, 6))
+
+        alertes_frame = ctk.CTkFrame(contenu, fg_color="transparent")
+        alertes_frame.pack(fill="x", padx=24)
+        for i in range(len(ALERTES)):
+            alertes_frame.columnconfigure(i, weight=1)
+        for i, (ico, tit, desc, col) in enumerate(ALERTES):
+            cadre_alerte(alertes_frame, ico, tit, desc, col).grid(
+                row=0, column=i, sticky="nsew", padx=(0 if i == 0 else 8, 0))
+
+        # Comptes
+        ctk.CTkLabel(contenu, text="Comptes",
+        font=("Arial", 15, "bold"),
+        text_color=C["texte"]).pack(anchor="w", padx=24, pady=(20, 6))
+        comptes_frame = ctk.CTkFrame(contenu, fg_color="transparent")
+        comptes_frame.pack(fill="x", padx=24)
+        for i in range(len(COMPTES)):
+            comptes_frame.columnconfigure(i, weight=1)
+        for i, (nom, solde, col) in enumerate(COMPTES):
+            cadre_compte(comptes_frame, nom, solde, col).grid(
+                row=0, column=i, sticky="nsew", padx=(0 if i == 0 else 8, 0))
+
+        # Graphique
+        ctk.CTkLabel(contenu, text="Revenus/Dépenses",
+        font=("Arial", 15, "bold"),
+        text_color=C["texte"]).pack(anchor="w", padx=24, pady=(20, 6))
+        graph_card = ctk.CTkFrame(contenu, fg_color=C["carte"], corner_radius=12,
+        border_width=1, border_color=C["bordure"])
+        graph_card.pack(fill="x", padx=24, pady=(0, 28))
+        GraphiqueBarres(graph_card, height=230).pack(
+            fill="both", expand=True, padx=8, pady=8)
+
+
+if __name__ == "__main__":
+    App().mainloop()
