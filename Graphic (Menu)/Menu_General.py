@@ -12,15 +12,12 @@ DEPENSES = [1000, 0, 0, 0, 0, 0, 0]
 
 ALERTES = [
     ("", "Découvert détecté", "Compte Joint : 0", C["rouge"]),
-    ("", "Dépenses en hausse", "+0% vs mois dernier", C["orange"]),
-    ("", "Objectif épargne", "0% de l'objectif", C["vert"]),
+    ("", "Dépenses en hausse", "+0% vs mois dernier", C["bleu"]),
 ]
 
 COMPTES = [
     ("Compte Courant", 0, C["bleu"]),
-    ("Livret A", 0, C["vert"]),
     ("Compte Joint", 0, C["rouge"]),
-    ("PEA", 0, C["cyan"]),
 ]
 
 
@@ -134,7 +131,7 @@ class GraphiqueBarres(tk.Canvas):
         font=("Arial", 10), anchor="w")
 
 
-class App(ctk.CTk):
+class Window(ctk.CTk):
 
     def __init__(self):
 
@@ -154,8 +151,7 @@ class App(ctk.CTk):
         text_color=C["bleu"]).pack(padx=20, pady=24, anchor="w")
         ctk.CTkFrame(sidebar, height=1, fg_color=C["bordure"]).pack(fill="x", padx=16)
 
-        for label, actif in [("Menu Globale", True), ("Transactions", False),
-        ("Historique", False)]:
+        for label, actif in [("Menu Globale", True), ("Historique", False)]:
             
             ctk.CTkButton(sidebar, text=label, anchor="w",
             fg_color="#1D3A6E" if actif else "transparent",
@@ -174,7 +170,7 @@ class App(ctk.CTk):
         ctk.CTkLabel(titre_ligne, text="Vue Globale", font=("Arial", 24, "bold"),
         text_color=C["texte"]).pack(side="left")
 
-        ctk.CTkButton(titre_ligne, text="+ Ajouter compte",
+        ctk.CTkButton(titre_ligne, text="Virement",
         fg_color=C["bleu"], corner_radius=8,
         height=34, font=("Arial", 12)).pack(side="right")
 
@@ -186,8 +182,6 @@ class App(ctk.CTk):
         for i, (titre, val, col) in enumerate([
             ("Solde Total", "€0", C["bleu"]),
             ("Dépenses ce mois", "€0", C["rouge"]),
-            ("Épargne ce mois", "€0", C["vert"]),
-            ("Prochains débits", "€0", C["orange"]),
         ]):
             cadre_kpi(kpis_frame, titre, val, col).grid(
                 row=0, column=i, sticky="nsew", padx=(0 if i == 0 else 8, 0))
@@ -229,4 +223,4 @@ class App(ctk.CTk):
 
 
 if __name__ == "__main__":
-    App().mainloop()
+    Window().mainloop()
