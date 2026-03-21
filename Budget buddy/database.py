@@ -1,11 +1,14 @@
 import mysql.connector
 import bcrypt
 
+# Poivre global
+PEPPER = "X9f$2!k@P0ivreUltraSecret"
+
 def get_connection():
     return mysql.connector.connect(
         host="localhost",
-        user="",
-        password="",
+        user="PopulaireBank",
+        password="StAliNe254vpQ!?",
         database="budget_buddy"
     )
 
@@ -39,18 +42,17 @@ def get_user_by_email(email):
     return user
 
 def hash_password(password: str) -> str:
+    # Ajouter le poivre
+    password_peppered = (password + PEPPER).encode('utf-8')
 
-    # Convertir le mot de passe en bytes
-    password_bytes= password.encode('utf-8')
+    # Hasher avec bcrypt (qui ajoute déjà un sel)
+    hashed = bcrypt.hashpw(password_peppered, bcrypt.gensalt())
 
-    # Générer un sel et hasher le mot de passe
-    hashed= bcrypt.hashpw(password_bytes, bcrypt.gensalt())
-
-    # Retourner le hash sous forme de string
     return hashed.decode('utf-8')
 
 def verify_password(password: str, hashed: str) -> bool:
-    password_bytes= password.encode('utf-8')
-    hashed_bytes= hashed.encode('utf-8')
+    # Ajouter le poivre avant vérification
+    password_peppered = (password + PEPPER).encode('utf-8')
+    hashed_bytes = hashed.encode('utf-8')
 
-    return bcrypt.checkpw(password_bytes, hashed_bytes)
+    return bcrypt.checkpw(password_peppered, hashed_bytes)
