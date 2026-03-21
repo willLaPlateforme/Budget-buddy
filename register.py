@@ -25,25 +25,18 @@ def is_valid_email(email: str) -> bool:
     return re.match(r"^[^@]+@[^@]+\.[^@]+$", email) is not None
 
 
-def is_strong_password(pw: str) -> bool:
-    """
-    --- AJOUT: validation de la force du mot de passe selon le cahier des charges
-    - Au moins 10 caractères
-    - Au moins une majuscule
-    - Au moins une minuscule
-    - Au moins un chiffre
-    - Au moins un caractère spécial
-    """
+# 🔥 Nouvelle fonction : renvoie un message d’erreur précis
+def check_password_strength(pw: str):
     if len(pw) < 10:
-        return False
+        return "Le mot de passe doit contenir au moins 10 caractères"
     if not re.search(r"[A-Z]", pw):
-        return False
+        return "Le mot de passe doit contenir au moins une majuscule"
     if not re.search(r"[a-z]", pw):
-        return False
+        return "Le mot de passe doit contenir au moins une minuscule"
     if not re.search(r"\d", pw):
-        return False
-    if not re.search(r"[^\w\s]", pw):  # caractère spécial
-        return False
+        return "Le mot de passe doit contenir au moins un chiffre"
+    if not re.search(r"[^\w\s]", pw):
+        return "Le mot de passe doit contenir au moins un caractère spécial"
     return True
 
 
@@ -120,7 +113,6 @@ class RegisterScreen(ctk.CTkFrame):
         ctk.CTkButton(self, text="Créer le compte", width=220, command=self.register_user).pack(pady=6)
         ctk.CTkButton(self, text="Retour", width=220, fg_color="gray", command=self.switch_to_login).pack(pady=4)
 
-        # --- AJOUT: Indication visuelle des règles de mot de passe (optionnel)
         self.password_rules = ctk.CTkLabel(self, text="Mot de passe: 10 caractères ou plus, maj, min, chiffre, spécial", text_color="gray")
         self.password_rules.pack(pady=(0, 8))
 
@@ -134,17 +126,16 @@ class RegisterScreen(ctk.CTkFrame):
             self.label_message.configure(text="❌ Tous les champs sont obligatoires", text_color="red")
             return
 
-        # --- AJOUT: validation format email
         if not is_valid_email(email):
             self.label_message.configure(text="❌ Email invalide", text_color="red")
             return
 
-        # --- AJOUT: validation force mot de passe selon le cahier des charges
-        if not is_strong_password(mot_de_passe):
-            self.label_message.configure(text="❌ Mot de passe trop faible (10+, maj, min, chiffre, spécial)", text_color="red")
+        # 🔥 Nouvelle validation détaillée
+        pw_check = check_password_strength(mot_de_passe)
+        if pw_check is not True:
+            self.label_message.configure(text=f"❌ {pw_check}", text_color="red")
             return
 
-        # Vérifier si l'email existe déjà via la fonction existante
         try:
             if get_user_by_email(email) is not None:
                 self.label_message.configure(text="❌ Cet email existe déjà", text_color="red")
@@ -154,7 +145,6 @@ class RegisterScreen(ctk.CTkFrame):
             self.label_message.configure(text="❌ Erreur base de données (vérif)", text_color="red")
             return
 
-        # Hash du mot de passe
         try:
             password_hash = hash_password(mot_de_passe)
         except Exception as e:
@@ -162,7 +152,6 @@ class RegisterScreen(ctk.CTkFrame):
             self.label_message.configure(text="❌ Erreur lors du hash", text_color="red")
             return
 
-        # INSERT direct via get_connection pour s'assurer du commit et diagnostiquer
         conn = None
         cursor = None
         try:
@@ -203,7 +192,6 @@ class RegisterScreen(ctk.CTkFrame):
             except Exception:
                 pass
 
-        # Vérifier insertion via get_user_by_email
         try:
             created = get_user_by_email(email)
         except Exception as e:
@@ -217,7 +205,6 @@ class RegisterScreen(ctk.CTkFrame):
             self.label_message.configure(text="❌ Échec inattendu : utilisateur non trouvé après création", text_color="red")
             return
 
-        # Succès : ouvrir le menu automatiquement
         self.label_message.configure(text="✔ Compte créé — connexion...", text_color="green")
         self._clear_fields()
         try:
@@ -271,7 +258,6 @@ class App(ctk.CTk):
         self.show_frame(RegisterScreen, self.show_login)
 
     def show_menu(self, user):
-        # Ouvre le dashboard complet après authentification réussie
         self.destroy()
         from Window import App as Dashboard
         Dashboard(user).mainloop()
